@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FruitLégumes - Boutique en ligne</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #FF9800;
+            --background-color: #f9f9f9;
+            --text-color: #333;
+            --card-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            width: 50px;
+            height: 50px;
+            background-color: white;
+            border-radius: 50%;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-weight: bold;
+            /* Remplacez ceci par votre logo plus tard */
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 20px;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        nav ul li a:hover {
+            color: var(--secondary-color);
+        }
+        
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .cart-count {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: var(--secondary-color);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        /* Carousel Styles */
+        .carousel-container {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .carousel {
+            position: relative;
+            height: 400px;
+            overflow: hidden;
+        }
+        
+        .carousel-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .carousel-slide.active {
+            opacity: 1;
+        }
+        
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .carousel-content {
+            position: absolute;
+            text-align: center;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.7);
+            padding: 20px;
+            background-color: rgba(0,0,0,0.5);
+            border-radius: 8px;
+            max-width: 80%;
+        }
+        
+        .carousel-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+        
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            padding: 15px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+        }
+        
+        .carousel-button:hover {
+            background-color: rgba(0,0,0,0.8);
+        }
+        
+        .carousel-button.prev {
+            left: 20px;
+        }
+        
+        .carousel-button.next {
+            right: 20px;
+        }
+        
+        .carousel-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        
+        .dot {
+            width: 12px;
+            height: 12px;
+            background-color: rgba(255,255,255,0.5);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .dot.active {
+            background-color: white;
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+        
+        .products {
+            padding: 3rem 0;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--primary-color);
+        }
+        
+        .category-title {
+            margin: 2rem 0 1rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+        
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 2rem;
+        }
+        
+        .product-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        
+        .product-image {
+            height: 200px;
+            width: 100%;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .product-image img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+        }
+        
+        .product-info {
+            padding: 15px;
+        }
+        
+        .product-name {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        
+        .product-price {
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        
+        .product-unit {
+            font-size: 0.9rem;
+            color: #777;
+            margin-bottom: 15px;
+        }
+        
+        .add-to-cart {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        
+        .add-to-cart:hover {
+            background-color: #43A047;
+        }
+        
+        footer {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+        }
+        
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 5px;
+            display: inline-block;
+        }
+        
+        .footer-section ul {
+            list-style: none;
+        }
+        
+        .footer-section ul li {
+            margin-bottom: 8px;
+        }
+        
+        .footer-section ul li a {
+            color: white;
+            text-decoration: none;
+        }
+        
+        .footer-section ul li a:hover {
+            color: var(--secondary-color);
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .social-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+        
+        .copyright {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        /* Cart Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: modalFadeIn 0.3s;
+        }
+        
+        @keyframes modalFadeIn {
+            from {opacity: 0; transform: translateY(-30px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+        
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close-modal:hover {
+            color: black;
+        }
+        
+        .cart-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .cart-table th, .cart-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .cart-table th {
+            background-color: #f5f5f5;
+        }
+        
+        .cart-item-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+        }
+        
+        .quantity-btn {
+            background-color: #f0f0f0;
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .quantity-input {
+            width: 40px;
+            text-align: center;
+            margin: 0 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 3px;
+        }
+        
+        .remove-item {
+            color: #e53935;
+            cursor: pointer;
+        }
+        
+        .cart-summary {
+            text-align: right;
+            margin-top: 20px;
+        }
+        
+        .cart-total {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .checkout-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .checkout-btn:hover {
+            background-color: #43A047;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav ul {
+                display: none;
+            }
+            
+            .product-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+            }
+            
+            .cart-table thead {
+                display: none;
+            }
+            
+            .cart-table tbody tr {
+                display: block;
+                margin-bottom: 15px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+            
+            .cart-table tbody td {
+                display: flex;
+                justify-content: space-between;
+                padding: 10px 15px;
+                text-align: right;
+                border-bottom: 1px solid #eee;
+            }
+            
+            .cart-table tbody td:before {
+                content: attr(data-label);
+                font-weight: bold;
+                float: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo-container">
+                    <div class="logo">FL</div>
+                    <h1>FruitLégumes</h1>
+                </div>
+                <ul>
+                    <li><a href="#fruits">Fruits</a></li>
+                    <li><a href="#legumes">Légumes</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <div class="cart-icon" onclick="openCartModal()">
+                    🛒 <span class="cart-count">0</span>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <section class="carousel-container">
+        <div id="carousel" class="carousel">
+            <div class="carousel-slide active">
+                <img src="/api/placeholder/1200/400" alt="Produits frais">
+                <div class="carousel-content">
+                    <h1>Des produits frais, directement chez vous</h1>
+                    <p>Découvrez notre sélection de fruits et légumes frais de saison, cultivés localement.</p>
+                </div>
+            </div>
+            <div class="carousel-slide">
+                <img src="/api/placeholder/1200/400" alt="Produits bio">
+                <div class="carousel-content">
+                    <h1>100% Bio et Local</h1>
+                    <p>Nous collaborons avec des producteurs locaux pour vous garantir des produits de qualité.</p>
+                </div>
+            </div>
+            <div class="carousel-slide">
+                <img src="/api/placeholder/1200/400" alt="Livraison rapide">
+                <div class="carousel-content">
+                    <h1>Livraison rapide</h1>
+                    <p>Commandez avant midi et recevez vos produits le jour même.</p>
+                </div>
+            </div>
+            <div class="carousel-slide">
+                <img src="/api/placeholder/1200/400" alt="Offres spéciales">
+                <div class="carousel-content">
+                    <h1>Offres spéciales hebdomadaires</h1>
+                    <p>Découvrez nos promotions et paniers de saison à prix réduits chaque semaine.</p>
+                </div>
+            </div>
+            <button class="carousel-button prev" onclick="moveCarousel(-1)">❮</button>
+            <button class="carousel-button next" onclick="moveCarousel(1)">❯</button>
+            <div class="carousel-dots">
+                <span class="dot active" onclick="jumpToSlide(0)"></span>
+                <span class="dot" onclick="jumpToSlide(1)"></span>
+                <span class="dot" onclick="jumpToSlide(2)"></span>
+                <span class="dot" onclick="jumpToSlide(3)"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="products container">
+        <h2 class="section-title">Nos produits</h2>
+        
+        <h3 id="fruits" class="category-title">Fruits</h3>
+        <div id="fruits-container" class="product-grid">
+            <!-- Les produits seront insérés ici par JavaScript -->
+        </div>
+        
+        <h3 id="legumes" class="category-title">Légumes</h3>
+        <div id="legumes-container" class="product-grid">
+            <!-- Les produits seront insérés ici par JavaScript -->
+        </div>
+    </section>
+
+    <section id="contact" class="container">
+        <h2 class="section-title">Contact</h2>
+        <p style="text-align: center;">Pour toute question ou information, n'hésitez pas à nous contacter:</p>
+        <div style="text-align: center; margin-top: 20px;">
+            <p>📞 01 23 45 67 89</p>
+            <p>✉️ contact@fruitslegumes.fr</p>
+            <p>🏠 123 Rue des Primeurs, 75000 Paris</p>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>À propos</h3>
+                    <p>FruitLégumes est votre boutique en ligne de fruits et légumes frais. Nous travaillons avec des producteurs locaux pour vous offrir les meilleurs produits.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Liens rapides</h3>
+                    <ul>
+                        <li><a href="#fruits">Fruits</a></li>
+                        <li><a href="#legumes">Légumes</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Suivez-nous</h3>
+                    <div class="social-links">
+                        <a href="#">Facebook</a>
+                        <a href="#">Instagram</a>
+                        <a href="#">Twitter</a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 FruitLégumes. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cart Modal -->
+    <div id="cartModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeCartModal()">&times;</span>
+            <h2>Votre Panier</h2>
+            <div id="cart-items-container">
+                <table class="cart-table">
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th>Nom</th>
+                            <th>Prix</th>
+                            <th>Quantité</th>
+                            <th>Total</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-items">
+                        <!-- Les produits du panier seront insérés ici -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="cart-summary">
+                <div class="cart-total">Total: <span id="cart-total-price">0.00</span> €</div>
+                <button class="checkout-btn" onclick="checkout()">Commander</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Données des produits (à remplacer par un fichier JSON externe)
+        const products = {
+            fruits: [
+                {
+                    id: 'f1',
+                    name: 'Pommes Golden',
+                    price: 2.99,
+                    unit: 'kg',
+                    image: '/api/placeholder/200/200',
+                    category: 'fruits'
+                },
+                {
+                    id: 'f2',
+                    name: 'Bananes',
+                    price: 1.99,
+                    unit: 'kg',
+                    image: '/api/placeholder/200/200',
+                    category: 'fruits'
+                },
+                {
+                    id: 'f3',
+                    name: 'Oranges',
+                    price: 3.49,
+                    unit: 'kg',
+                    image: '/api/placeholder/200/200',
+                    category: 'fruits'
+                },
+                {
+                    id: 'f4',
+                    name: 'Fraises',
+                    price: 4.99,
+                    unit: 'barquette',
+                    image: '/api/placeholder/200/200',
+                    category: 'fruits'
+                }
+            ],
+            legumes: [
+                {
+                    id: 'l1',
+                    name: 'Carottes',
+                    price: 1.49,
+                    unit: 'kg',
+                    image: '/api/placeholder/200/200',
+                    category: 'legumes'
+                },
+                {
+                    id: 'l2',
+                    name: 'Pommes de terre',
+                    price: 2.29,
+                    unit: 'kg',
+                    image: '/api/placeholder/200/200',
+                    category: 'legumes'
+                },
+                {
+                    id: 'l3',
+                    name: 'Tomates',
+                    price: 3.99,
+                    unit: 'kg',
+                    image: '/api/placeholder/200/200',
+                    category: 'legumes'
+                },
+                {
+                    id: 'l4',
+                    name: 'Courgettes',
+                    price: 2.79,
+                    unit: 'kg',
+                    image: '/api/placeholder/200/200',
+                    category: 'legumes'
+                }
+            ]
+        };
+
+        // Panier
+        let cart = [];
+
+        // Afficher les produits
+        function displayProducts() {
+            const fruitsContainer = document.getElementById('fruits-container');
+            const legumesContainer = document.getElementById('legumes-container');
+            
+            // Afficher les fruits
+            products.fruits.forEach(product => {
+                fruitsContainer.appendChild(createProductCard(product));
+            });
+            
+            // Afficher les légumes
+            products.legumes.forEach(product => {
+                legumesContainer.appendChild(createProductCard(product));
+            });
+        }
+
+        // Créer une carte de produit
+        function createProductCard(product) {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            
+            card.innerHTML = `
+                <div class="product-image">
+                    <img src="${product.image}" alt="${product.name}">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">${product.name}</h3>
+                    <p class="product-price">${product.price.toFixed(2)} €</p>
+                    <p class="product-unit">Prix par ${product.unit}</p>
+                    <button class="add-to-cart" onclick="addToCart('${product.id}', '${product.category}')">Ajouter au panier</button>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Charger les produits depuis un Google Sheet
+        async function loadProductsFromSheet() {
+            try {
+                // ID de la feuille Google Sheet (à remplacer par le tien)
+                const sheetId = 'YOUR_SHEET_ID_HERE';
+                // URL pour accéder aux données publiques du sheet (nécessite de publier la feuille)
+                const url = `https://spreadsheets.google.com/feeds/list/${sheetId}/1/public/values?alt=json`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                // Traiter les données
+                const entries = data.feed.entry;
+                const productsData = {
+                    fruits: [],
+                    legumes: []
+                };
+                
+                if (entries && entries.length) {
+                    entries.forEach(entry => {
+                        const product = {
+                            id: entry.gsx$id.$t,
+                            name: entry.gsx$nom.$t,
+                            price: parseFloat(entry.gsx$prix.$t),
+                            unit: entry.gsx$unite.$t,
+                            category: entry.gsx$categorie.$t,
+                            image: entry.gsx$image.$t || '/api/placeholder/200/200',
+                            stock: parseInt(entry.gsx$stock.$t) || 0
+                        };
+                        
+                        if (product.category === 'fruits') {
+                            productsData.fruits.push(product);
+                        } else if (product.category === 'legumes') {
+                            productsData.legumes.push(product);
+                        }
+                    });
+                }
+                
+                return productsData;
+            } catch (error) {
+                console.error('Erreur lors du chargement des produits:', error);
+                // En cas d'erreur, retourner les données statiques par défaut
+                return products;
+            }
+        }
+
+        // Envoyer une commande au Google Sheet
+        async function sendOrderToSheet(orderData) {
+            try {
+                // URL de l'application web Google Apps Script qui traitera la commande
+                const scriptUrl = 'YOUR_GOOGLE_SCRIPT_URL_HERE';
+                
+                const response = await fetch(scriptUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error('Erreur lors de l\'envoi de la commande:', error);
+                return { success: false, error: 'Erreur de connexion' };
+            }
+        }
+
+        // Vérifier le stock avant d'ajouter au panier
+        function checkStock(productId, category) {
+            const product = products[category].find(p => p.id === productId);
+            
+            if (product && product.stock > 0) {
+                return true;
+            } else if (product && product.stock <= 0) {
+                showNotification('Ce produit est en rupture de stock', 'error');
+                return false;
+            }
+            return false;
+        }
+
+        // Ajouter un produit au panier avec vérification du stock
+        function addToCart(productId, category) {
+            const product = products[category].find(p => p.id === productId);
+            
+            if (product) {
+                // Vérifier si le produit est en stock (si la propriété stock existe)
+                if (product.hasOwnProperty('stock') && product.stock <= 0) {
+                    showNotification(`${product.name} est en rupture de stock !`, 'error');
+                    return;
+                }
+                
+                // Vérifier si le produit est déjà dans le panier
+                const existingItem = cart.find(item => item.id === productId);
+                
+                if (existingItem) {
+                    // Vérifier si l'augmentation de quantité dépasse le stock disponible
+                    if (product.hasOwnProperty('stock') && existingItem.quantity + 1 > product.stock) {
+                        showNotification(`Stock insuffisant pour ${product.name}`, 'error');
+                        return;
+                    }
+                    
+                    existingItem.quantity += 1;
+                } else {
+                    cart.push({
+                        ...product,
+                        quantity: 1
+                    });
+                }
+                
+                updateCartCount();
+                showNotification(`${product.name} ajouté au panier !`, 'success');
+            }
+        }
+
+        // Afficher notification avec type (success, error)
+        function showNotification(message, type = 'success') {
+            // Créer une notification avec style selon le type
+            const notification = document.createElement('div');
+            notification.textContent = message;
+            notification.style.position = 'fixed';
+            notification.style.bottom = '20px';
+            notification.style.right = '20px';
+            notification.style.padding = '10px 20px';
+            notification.style.borderRadius = '4px';
+            notification.style.zIndex = '1001';
+            notification.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+            
+            // Appliquer la couleur selon le type
+            if (type === 'error') {
+                notification.style.backgroundColor = '#e53935';
+            } else {
+                notification.style.backgroundColor = 'var(--primary-color)';
+            }
+            notification.style.color = 'white';
+            
+            document.body.appendChild(notification);
+            
+            // Supprimer après 3 secondes
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.5s';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 500);
+            }, 3000);
+        }
+
+        // Ouvrir le panier modal
+        function openCartModal() {
+            const modal = document.getElementById('cartModal');
+            modal.style.display = 'block';
+            updateCartItems();
+        }
+
+        // Fermer le panier modal
+        function closeCartModal() {
+            const modal = document.getElementById('cartModal');
+            modal.style.display = 'none';
+        }
+
+        // Mettre à jour les éléments du panier
+        function updateCartItems() {
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartTotalPrice = document.getElementById('cart-total-price');
+            
+            // Vider le conteneur
+            cartItemsContainer.innerHTML = '';
+            
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<tr><td colspan="6" style="text-align: center;">Votre panier est vide</td></tr>';
+                cartTotalPrice.textContent = '0.00';
+                return;
+            }
+            
+            // Ajouter chaque produit au panier
+            let total = 0;
+            
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td data-label="Produit"><img src="${item.image}" alt="${item.name}" class="cart-item-image"></td>
+                    <td data-label="Nom">${item.name}</td>
+                    <td data-label="Prix">${item.price.toFixed(2)} €/${item.unit}</td>
+                    <td data-label="Quantité">
+                        <div class="quantity-control">
+                            <button class="quantity-btn" onclick="updateItemQuantity('${item.id}', ${item.quantity - 1})">-</button>
+                            <input type="number" class="quantity-input" value="${item.quantity}" min="1" onchange="updateItemQuantity('${item.id}', this.value)">
+                            <button class="quantity-btn" onclick="updateItemQuantity('${item.id}', ${item.quantity + 1})">+</button>
+                        </div>
+                    </td>
+                    <td data-label="Total">${itemTotal.toFixed(2)} €</td>
+                    <td data-label="Action"><span class="remove-item" onclick="removeFromCart('${item.id}')">❌</span></td>
+                `;
+                
+                cartItemsContainer.appendChild(tr);
+            });
+            
+            cartTotalPrice.textContent = total.toFixed(2);
+        }
+
+        // Mettre à jour la quantité d'un produit
+        function updateItemQuantity(productId, quantity) {
+            const item = cart.find(item => item.id === productId);
+            
+            if (item) {
+                quantity = parseInt(quantity);
+                
+                if (quantity <= 0) {
+                    removeFromCart(productId);
+                } else {
+                    item.quantity = quantity;
+                    updateCartCount();
+                    updateCartItems();
+                }
+            }
+        }
+
+        // Supprimer un produit du panier
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCartCount();
+            updateCartItems();
+        }
+
+        // Passer à la commande
+        async function checkout() {
+            if (cart.length === 0) {
+                showNotification('Votre panier est vide !', 'error');
+                return;
+            }
+            
+            // Collecter les données de commande
+            const orderItems = cart.map(item => ({
+                id: item.id,
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+                total: item.price * item.quantity
+            }));
+            
+            const orderTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+            
+            // Données client (à remplacer par un formulaire)
+            const customerData = {
+                name: prompt('Votre nom :') || 'Client',
+                email: prompt('Votre email :') || 'email@exemple.com',
+                phone: prompt('Votre téléphone :') || 'Non spécifié',
+                address: prompt('Votre adresse de livraison :') || 'Non spécifiée'
+            };
+            
+            // Créer l'objet commande
+            const orderData = {
+                customer: customerData,
+                items: orderItems,
+                total: orderTotal,
+                date: new Date().toISOString(),
+                status: 'Nouvelle'
+            };
+            
+            // En production, envoyer vers Google Sheet
+            try {
+                // Commenté pour le moment - à activer une fois votre script configuré
+                // const result = await sendOrderToSheet(orderData);
+                // if (result.success) {
+                //    showNotification('Commande envoyée avec succès !', 'success');
+                // } else {
+                //    throw new Error(result.error || 'Erreur inconnue');
+                // }
+                
+                // Pour le prototype, afficher simplement un message
+                console.log('Données de commande :', orderData);
+                alert(`Merci ${customerData.name} pour votre commande d'un montant de ${orderTotal.toFixed(2)} € ! Notre équipe va la traiter dans les plus brefs délais.`);
+                
+                // Vider le panier
+                cart = [];
+                updateCartCount();
+                closeCartModal();
+            } catch (error) {
+                console.error('Erreur lors de la commande:', error);
+                showNotification('Un problème est survenu lors de la commande. Veuillez réessayer.', 'error');
+            }
+        }
+
+        // Fermer le modal en cliquant en dehors
+        window.onclick = function(event) {
+            const modal = document.getElementById('cartModal');
+            if (event.target === modal) {
+                closeCartModal();
+            }
+        };
+
+        // Variables pour le carrousel
+        let currentSlide = 0;
+        const totalSlides = document.querySelectorAll('.carousel-slide').length;
+        let carouselInterval;
+
+        // Déplacer le carrousel
+        function moveCarousel(direction) {
+            // Arrêter l'auto-rotation quand l'utilisateur interagit
+            stopCarouselInterval();
+            
+            const slides = document.querySelectorAll('.carousel-slide');
+            const dots = document.querySelectorAll('.dot');
+            
+            // Retirer la classe active de la slide actuelle
+            slides[currentSlide].classList.remove('active');
+            dots[currentSlide].classList.remove('active');
+            
+            // Calculer la nouvelle slide
+            currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
+            
+            // Ajouter la classe active à la nouvelle slide
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+            
+            // Redémarrer l'auto-rotation
+            startCarouselInterval();
+        }
+
+        // Aller directement à une slide spécifique
+        function jumpToSlide(slideIndex) {
+            stopCarouselInterval();
+            
+            const slides = document.querySelectorAll('.carousel-slide');
+            const dots = document.querySelectorAll('.dot');
+            
+            // Retirer la classe active de la slide actuelle
+            slides[currentSlide].classList.remove('active');
+            dots[currentSlide].classList.remove('active');
+            
+            // Définir la nouvelle slide
+            currentSlide = slideIndex;
+            
+            // Ajouter la classe active à la nouvelle slide
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+            
+            startCarouselInterval();
+        }
+
+        // Démarrer l'auto-rotation du carrousel
+        function startCarouselInterval() {
+            carouselInterval = setInterval(() => {
+                moveCarousel(1);
+            }, 5000); // Changer de slide toutes les 5 secondes
+        }
+
+        // Arrêter l'auto-rotation du carrousel
+        function stopCarouselInterval() {
+            clearInterval(carouselInterval);
+        }
+
+        // Initialiser l'affichage des produits et le carrousel
+        async function initializeApp() {
+            try {
+                // Essayer de charger les produits depuis le Google Sheet
+                // Décommenter cette ligne quand le Google Sheet sera configuré
+                // products = await loadProductsFromSheet();
+            } catch (error) {
+                console.error('Erreur lors du chargement des données:', error);
+                // En cas d'échec, utiliser les données statiques
+            }
+            
+            // Afficher les produits
+            displayProducts();
+            updateCartCount();
+            startCarouselInterval();
+        }
+
+        // Initialiser l'application au chargement
+        window.onload = initializeApp;
+    </script>
+</body>
+</html>
