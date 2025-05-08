@@ -1268,16 +1268,27 @@
         }
 
         // Initialiser l'application au chargement
-        window.onload = initializeApp;
 document.addEventListener('DOMContentLoaded', function () {
-    fetch('https://script.google.com/macros/s/{TON_DEPLOYMENT_ID}/exec')
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);
-            document.getElementById('monElement').innerText = data.message;
-        })
-        .catch(error => console.error('Erreur:', error));
-});
+   fetch('config.json')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Erreur lors du chargement de config.json : " + response.status);
+      }
+      return response.json();
+    })
+    .then(config => {
+      console.log("Configuration chargée :", config);
+      // Utilise la configuration pour personnaliser l'affichage de la page
+      // par exemple, insertion dynamique de contenu dans un élément du DOM.
+      const mainContent = document.getElementById("main-content");
+      if (mainContent) {
+          mainContent.innerHTML = `
+            <h1>${config.storeInfo.name}</h1>
+            <p>Contactez-nous par email: ${config.storeInfo.contactEmail}</p>
+          `;
+      }
+    })
+    .catch(error => console.error("Erreur lors du chargement de config.json :", error));
 </script>
 </body>
 </html>
