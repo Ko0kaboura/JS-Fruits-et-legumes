@@ -385,6 +385,9 @@
             border-radius: 8px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             animation: modalFadeIn 0.3s;
+            /* Ajouté pour permettre le défilement si le contenu est trop long */
+            max-height: 80vh;
+            overflow-y: auto;
         }
         
         @keyframes modalFadeIn {
@@ -480,7 +483,60 @@
         .checkout-btn:hover {
             background-color: #43A047;
         }
-        
+        /* Styles pour le formulaire de commande */
+        #checkout-form {
+            margin-top: 30px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        #checkout-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        #checkout-form input, 
+        #checkout-form select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .error {
+            color: #e53935;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .required {
+            color: #e53935;
+        }
+
+        .pickup-info {
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        /* Style pour les checkbox pour qu'elles ne prennent pas toute la largeur */
+        #checkout-form input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+
+        #checkout-form button[type="submit"] {
+            margin-top: 20px;
+            width: 100%;
+        }
         /* Responsive */
         @media (max-width: 768px) {
             nav ul {
@@ -654,18 +710,91 @@
                             <th>Total</th>
                             <th>Action</th>
                         </tr>
-                    </thead>
-                    <tbody id="cart-items">
-                        <!-- Les produits du panier seront insérés ici -->
-                    </tbody>
-                </table>
-            </div>
-            <div class="cart-summary">
-                <div class="cart-total">Total: <span id="cart-total-price">0.00</span> €</div>
-                <button class="checkout-btn" onclick="checkout()">Commander</button>
-            </div>
+                </thead>
+                <tbody id="cart-items">
+                    <!-- Les produits du panier seront insérés ici -->
+                </tbody>
+            </table>
         </div>
+        <div class="cart-summary">
+            <div class="cart-total">Total: <span id="cart-total-price">0.00</span> €</div>
+        </div>
+        
+        <!-- Début du formulaire de commande -->
+        <h2>Informations de commande</h2>
+        <form id="checkout-form">
+            <!-- Informations personnelles -->
+            <div class="form-group">
+                <label for="nom">Nom <span class="required">*</span></label>
+                <input type="text" id="nom" name="nom" required>
+                <div id="nom-error" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="prenom">Prénom <span class="required">*</span></label>
+                <input type="text" id="prenom" name="prenom" required>
+                <div id="prenom-error" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="telephone">Numéro de téléphone <span class="required">*</span></label>
+                <input type="tel" id="telephone" name="telephone" placeholder="ex: 0123456789" required>
+                <div id="telephone-error" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email <span class="required">*</span></label>
+                <input type="email" id="email" name="email" required>
+                <div id="email-error" class="error"></div>
+            </div>
+            
+            <!-- Option professionnel -->
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="professionnel" name="professionnel">
+                    Je suis un professionnel (option livraison disponible)
+                </label>
+            </div>
+            
+            <!-- Options de livraison/récupération -->
+            <div class="form-group" id="livraison-container" style="display: none;">
+                <label for="livraison">
+                    <input type="checkbox" id="livraison" name="livraison">
+                    Je souhaite une livraison (uniquement pour les professionnels)
+                </label>
+            </div>
+            
+            <!-- Date de récupération -->
+            <div class="form-group" id="date-pickup-container">
+                <label for="date-pickup">Date de récupération <span class="required">*</span></label>
+                <input type="date" id="date-pickup" name="date-pickup" required>
+                <div id="date-error" class="error"></div>
+                <div class="pickup-info">
+                    La date de récupération doit être au minimum 72h après la date de commande.
+                </div>
+            </div>
+            
+            <!-- Lieu de récupération -->
+            <div class="form-group" id="lieu-pickup-container">
+                <label for="lieu-pickup">Lieu de récupération <span class="required">*</span></label>
+                <select id="lieu-pickup" name="lieu-pickup" required disabled>
+                    <option value="">Sélectionnez une date de récupération d'abord</option>
+                </select>
+                <div id="lieu-error" class="error"></div>
+                <div class="pickup-info" id="pickup-details">
+                    <strong>Lieux de récupération disponibles selon le jour :</strong><br>
+                    - Mercredi : Enghien<br>
+                    - Vendredi : Lasne<br>
+                    - Samedi : Rixensart<br>
+                    - Dimanche : Silly
+                </div>
+            </div>
+            
+            <button type="submit" class="checkout-btn">Valider ma commande</button>
+        </form>
+        <!-- Fin du formulaire de commande -->
     </div>
+</div>
 
     <script>
         // Données des produits (à remplacer par un fichier JSON externe)
@@ -783,7 +912,7 @@
         async function loadProductsFromSheet() {
             try {
                 // ID de la feuille Google Sheet (à remplacer par le tien)
-                const sheetId = 'YOUR_SHEET_ID_HERE';
+                const sheetId = '1IW4oW043F1-Gv0C8POfsCJ7KSilKw89Ta0dsIgBIqQM';
                 // URL pour accéder aux données publiques du sheet (nécessite de publier la feuille)
                 const url = `https://spreadsheets.google.com/feeds/list/${sheetId}/1/public/values?alt=json`;
                 
@@ -829,7 +958,7 @@
         async function sendOrderToSheet(orderData) {
             try {
                 // URL de l'application web Google Apps Script qui traitera la commande
-                const scriptUrl = 'YOUR_GOOGLE_SCRIPT_URL_HERE';
+                const scriptUrl = 'https://script.google.com/macros/s/AKfycbyzTLA5eILtG_bzO8J0KsCclmJ4z_HdPhCkdvAkNj-eYkd-1ERvaGvd_MXVz41LpKJU/exec';
                 
                 const response = await fetch(scriptUrl, {
                     method: 'POST',
@@ -1044,18 +1173,13 @@
             
             // En production, envoyer vers Google Sheet
             try {
-                // Commenté pour le moment - à activer une fois votre script configuré
-                // const result = await sendOrderToSheet(orderData);
-                // if (result.success) {
-                //    showNotification('Commande envoyée avec succès !', 'success');
-                // } else {
-                //    throw new Error(result.error || 'Erreur inconnue');
-                // }
-                
-                // Pour le prototype, afficher simplement un message
-                console.log('Données de commande :', orderData);
-                alert(`Merci ${customerData.name} pour votre commande d'un montant de ${orderTotal.toFixed(2)} € ! Notre équipe va la traiter dans les plus brefs délais.`);
-                
+    // Envoyer les données vers Google Sheet
+    const result = await sendOrderToSheet(orderData);
+    if (result.success) {
+        showNotification('Commande envoyée avec succès !', 'success');
+    } else {
+        throw new Error(result.error || 'Erreur inconnue');
+    }
                 // Vider le panier
                 cart = [];
                 updateCartCount();
