@@ -798,76 +798,58 @@
 
     <script>
         // Données des produits (à remplacer par un fichier JSON externe)
-        const products = {
-            fruits: [
-                {
-                    id: 'f1',
-                    name: 'Pommes Golden',
-                    price: 2.99,
-                    unit: 'kg',
-                    image: '/api/placeholder/200/200',
-                    category: 'fruits'
-                },
-                {
-                    id: 'f2',
-                    name: 'Bananes',
-                    price: 1.99,
-                    unit: 'kg',
-                    image: '/api/placeholder/200/200',
-                    category: 'fruits'
-                },
-                {
-                    id: 'f3',
-                    name: 'Oranges',
-                    price: 3.49,
-                    unit: 'kg',
-                    image: '/api/placeholder/200/200',
-                    category: 'fruits'
-                },
-                {
-                    id: 'f4',
-                    name: 'Fraises',
-                    price: 4.99,
-                    unit: 'barquette',
-                    image: '/api/placeholder/200/200',
-                    category: 'fruits'
+        // Variables globales
+        let config = {};
+        let products = { fruits: [], legumes: [] };
+        let cart = [];
+
+        // Charger la configuration
+        async function loadConfig() {
+            try {
+                const response = await fetch('config.json');
+                config = await response.json();
+                console.log('Configuration chargée avec succès');
+                return true;
+            } catch (error) {
+                console.error('Erreur lors du chargement de la configuration:', error);
+                return false;
+            }
+        }
+
+        // Initialisation de l'application
+        async function initApp() {
+            // Charger la configuration d'abord
+            const configLoaded = await loadConfig();
+            if (!configLoaded) {
+                console.error("Impossible de charger la configuration");
+                return;
+            }
+            
+            // Charger les produits depuis la feuille ou utiliser les produits de secours
+            if (config.googleSheet && config.googleSheet.sheetId) {
+                try {
+                    const loadedProducts = await loadProductsFromSheet();
+                    if (loadedProducts) {
+                        products = loadedProducts;
+                    } else {
+                        products = config.fallbackProducts || products;
+                    }
+                } catch (error) {
+                    console.error("Erreur lors du chargement des produits:", error);
+                    products = config.fallbackProducts || products;
                 }
-            ],
-            legumes: [
-                {
-                    id: 'l1',
-                    name: 'Carottes',
-                    price: 1.49,
-                    unit: 'kg',
-                    image: '/api/placeholder/200/200',
-                    category: 'legumes'
-                },
-                {
-                    id: 'l2',
-                    name: 'Pommes de terre',
-                    price: 2.29,
-                    unit: 'kg',
-                    image: '/api/placeholder/200/200',
-                    category: 'legumes'
-                },
-                {
-                    id: 'l3',
-                    name: 'Tomates',
-                    price: 3.99,
-                    unit: 'kg',
-                    image: '/api/placeholder/200/200',
-                    category: 'legumes'
-                },
-                {
-                    id: 'l4',
-                    name: 'Courgettes',
-                    price: 2.79,
-                    unit: 'kg',
-                    image: '/api/placeholder/200/200',
-                    category: 'legumes'
-                }
-            ]
-        };
+            } else {
+                products = config.fallbackProducts || products;
+            }
+            
+            // Afficher les produits
+            displayProducts();
+            
+            // Autres initialisations...
+        }
+
+        // Exécuter l'initialisation quand la page est chargée
+        window.addEventListener('DOMContentLoaded', initApp);
 
         // Panier
         let cart = [];
@@ -911,9 +893,12 @@
         // Charger les produits depuis un Google Sheet
         async function loadProductsFromSheet() {
             try {
-                // ID de la feuille Google Sheet (à remplacer par le tien)
-                const sheetId = '1IW4oW043F1-Gv0C8POfsCJ7KSilKw89Ta0dsIgBIqQM';
-                // URL pour accéder aux données publiques du sheet (nécessite de publier la feuille)
+                const sheetId = config.googleSheet.sheetId;
+                if (!sheetId) {
+                    console.warn("ID Google Sheet non défini dans la configuration");
+                    return null;
+                }
+                
                 const url = `https://spreadsheets.google.com/feeds/list/${sheetId}/1/public/values?alt=json`;
                 
                 const response = await fetch(url);
