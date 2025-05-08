@@ -1,8 +1,8 @@
 {
   "googleSheet": {
     "sheetId": "1IW4oW043F1-Gv0C8POfsCJ7KSilKw89Ta0dsIgBIqQM",
-    "scriptUrl": "https://script.google.com/d/1RyaVV9D5p6pDL9SAg7-CqUHOVUijBUIvVoRgPBL8_GLwD4xPtfQZHDB9/edit?usp=drive_link"
-  },
+    "scriptUrl": "https://script.google.com/macros/s/AKfycbzfBnyOY12HY39oj-dMtBy4L2zkj_0BioCT3OiUSP1XI7G1-7xERvN7_Ln3X4dB3Mmi/exec"
+   },
   "storeInfo": {
     "name": "Js Fruits&Légumes",
     "currency": "€",
@@ -34,51 +34,9 @@
       "name": "Légumes",
       "description": "Légumes de saison"
     },
-    "Herbes": {
+    "herbes": {
       "name": "Herbes",
       "description": "Nos herbes aromatiques"
     }
-  },
-  "fallbackProducts": {
-    "fruits": [
-      {
-        "id": "pomme-golden",
-        "name": "Pommes Golden",
-        "price": 3.50,
-        "unit": "kg",
-        "category": "fruits",
-        "image": "/api/placeholder/200/200",
-        "stock": 25
-      },
-      {
-        "id": "banane-bio",
-        "name": "Bananes Bio",
-        "price": 2.80,
-        "unit": "kg",
-        "category": "fruits",
-        "image": "/api/placeholder/200/200",
-        "stock": 30
-      }
-    ],
-    "legumes": [
-      {
-        "id": "carotte-bio",
-        "name": "Carottes Bio",
-        "price": 2.20,
-        "unit": "kg",
-        "category": "legumes",
-        "image": "/api/placeholder/200/200",
-        "stock": 15
-      },
-      {
-        "id": "tomate-grappe",
-        "name": "Tomates en Grappe",
-        "price": 3.90,
-        "unit": "kg",
-        "category": "legumes",
-        "image": "/api/placeholder/200/200",
-        "stock": 20
-      }
-    ]
   }
 }
