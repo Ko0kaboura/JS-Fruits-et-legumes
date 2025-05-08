@@ -1,7 +1,7 @@
 {
   "googleSheet": {
     "sheetId": "1IW4oW043F1-Gv0C8POfsCJ7KSilKw89Ta0dsIgBIqQM",
-    "scriptUrl": "https://spreadsheets.google.com/feeds/list/${sheetId}/1/public/values?alt=json"
+    "scriptUrl": "https://script.google.com/macros/s/AKfycbxxxxxxxxxxxxxxxxxxxx/exec"
   },
   "storeInfo": {
     "name": "Js Fruits&Légumes",
@@ -28,13 +28,15 @@
   "categories": {
     "fruits": {
       "name": "Fruits",
-      "description": "Nos fruits frais et de saison",
-      "icon": "🍎"
+      "description": "Nos fruits de saison"
     },
     "legumes": {
       "name": "Légumes",
-      "description": "Légumes bio cultivés localement",
-      "icon": "🥦"
+      "description": "Légumes de saison"
+    },
+    "Herbes": {
+      "name": "Herbes",
+      "description": "Nos herbes aromatiques"
     }
   },
   "fallbackProducts": {
