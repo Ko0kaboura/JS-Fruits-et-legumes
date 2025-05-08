@@ -851,9 +851,6 @@
         // Exécuter l'initialisation quand la page est chargée
         window.addEventListener('DOMContentLoaded', initApp);
 
-        // Panier
-        let cart = [];
-
         // Afficher les produits
         function displayProducts() {
             const fruitsContainer = document.getElementById('fruits-container');
@@ -941,25 +938,28 @@
 
         // Envoyer une commande au Google Sheet
         async function sendOrderToSheet(orderData) {
-            try {
-                // URL de l'application web Google Apps Script qui traitera la commande
-                const scriptUrl = 'https://script.google.com/macros/s/AKfycbyzTLA5eILtG_bzO8J0KsCclmJ4z_HdPhCkdvAkNj-eYkd-1ERvaGvd_MXVz41LpKJU/exec';
-                
-                const response = await fetch(scriptUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(orderData)
-                });
-                
-                const result = await response.json();
-                return result;
-            } catch (error) {
-                console.error('Erreur lors de l\'envoi de la commande:', error);
-                return { success: false, error: 'Erreur de connexion' };
-            }
+    try {
+        const scriptUrl = config.googleSheet.scriptUrl;
+        if (!scriptUrl) {
+            console.warn("https://script.google.com/macros/s/AKfycbw8DbyXu-dbPA1eya-JiKbiSVGzuuHjr7iR_NPj5eSFSdHZfQzW7En-oSUaOyCifpcL/exec");
+            return { success: false, error: 'Configuration incomplète' };
         }
+        
+        const response = await fetch(scriptUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(orderData)
+        });
+        
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Erreur lors de l\'envoi de la commande:', error);
+        return { success: false, error: 'Erreur de connexion' };
+    }
+}
 
         // Vérifier le stock avant d'ajouter au panier
         function checkStock(productId, category) {
@@ -1123,57 +1123,63 @@
 
         // Passer à la commande
         async function checkout() {
-            if (cart.length === 0) {
-                showNotification('Votre panier est vide !', 'error');
-                return;
-            }
-            
-            // Collecter les données de commande
-            const orderItems = cart.map(item => ({
-                id: item.id,
-                name: item.name,
-                price: item.price,
-                quantity: item.quantity,
-                total: item.price * item.quantity
-            }));
-            
-            const orderTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-            
-            // Données client (à remplacer par un formulaire)
-            const customerData = {
-                name: prompt('Votre nom :') || 'Client',
-                email: prompt('Votre email :') || 'email@exemple.com',
-                phone: prompt('Votre téléphone :') || 'Non spécifié',
-                address: prompt('Votre adresse de livraison :') || 'Non spécifiée'
-            };
-            
-            // Créer l'objet commande
-            const orderData = {
-                customer: customerData,
-                items: orderItems,
-                total: orderTotal,
-                date: new Date().toISOString(),
-                status: 'Nouvelle'
-            };
-            
-            // En production, envoyer vers Google Sheet
-            try {
-    // Envoyer les données vers Google Sheet
-    const result = await sendOrderToSheet(orderData);
-    if (result.success) {
-        showNotification('Commande envoyée avec succès !', 'success');
-    } else {
-        throw new Error(result.error || 'Erreur inconnue');
+    if (cart.length === 0) {
+        showNotification('Votre panier est vide !', 'error');
+        return;
     }
-                // Vider le panier
-                cart = [];
-                updateCartCount();
-                closeCartModal();
-            } catch (error) {
-                console.error('Erreur lors de la commande:', error);
-                showNotification('Un problème est survenu lors de la commande. Veuillez réessayer.', 'error');
+    
+    // Collecter les données de commande
+    const orderItems = cart.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        total: item.price * item.quantity
+    }));
+    
+    const orderTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    
+    // Données client (à remplacer par un formulaire)
+    const customerData = {
+        name: prompt('Votre nom :') || 'Client',
+        email: prompt('Votre email :') || 'email@exemple.com',
+        phone: prompt('Votre téléphone :') || 'Non spécifié',
+        address: prompt('Votre adresse de livraison :') || 'Non spécifiée'
+    };
+    
+    // Créer l'objet commande
+    const orderData = {
+        customer: customerData,
+        items: orderItems,
+        total: orderTotal,
+        date: new Date().toISOString(),
+        status: 'Nouvelle'
+    };
+    
+    try {
+        if (config.features && config.features.demoMode) {
+            // Mode démo
+            console.log('Données de commande (mode démo):', orderData);
+            showNotification('Commande démo traitée avec succès!', 'success');
+        } else {
+            // Mode production
+            const result = await sendOrderToSheet(orderData);
+            if (result.success) {
+                showNotification('Commande envoyée avec succès!', 'success');
+            } else {
+                throw new Error(result.error || 'Erreur inconnue');
             }
         }
+        
+        // Vider le panier
+        cart = [];
+        updateCartCount();
+        closeCartModal();
+    } catch (error) {
+        console.error('Erreur lors de la commande:', error);
+        showNotification('Un problème est survenu lors de la commande. Veuillez réessayer.', 'error');
+    }
+}
 
         // Fermer le modal en cliquant en dehors
         window.onclick = function(event) {
