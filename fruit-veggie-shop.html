@@ -1269,6 +1269,15 @@
 
         // Initialiser l'application au chargement
         window.onload = initializeApp;
-    </script>
+document.addEventListener('DOMContentLoaded', function () {
+    fetch('https://script.google.com/macros/s/{TON_DEPLOYMENT_ID}/exec')
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            document.getElementById('monElement').innerText = data.message;
+        })
+        .catch(error => console.error('Erreur:', error));
+});
+</script>
 </body>
 </html>
