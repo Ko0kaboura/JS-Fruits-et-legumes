@@ -1292,6 +1292,68 @@ document.addEventListener('DOMContentLoaded', function () {
             <p>Contactez-nous par email: ${config.storeInfo.contactEmail}</p>
           `;
       }
+        // 2. Utiliser l'URL de l'Apps Script pour récupérer les données dynamiques
+      return fetch(https://script.google.com/d/1RyaVV9D5p6pDL9SAg7-CqUHOVUijBUIvVoRgPBL8_GLwD4xPtfQZHDB9/edit?usp=drive_link)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Erreur lors du chargement des données de l'Apps Script : " + response.status);
+          }
+          return response.json();
+        })
+        .then(dynamicData => {
+          console.log("Données dynamiques :", dynamicData);
+          // Ici, on suppose que ton Apps Script renvoie un JSON comportant par exemple une clé "products"
+          // qui contient des tableaux pour "fruits", "legumes", et éventuellement "herbes".
+          // Assure-toi que la structure correspond à celle renvoyée par ton Apps Script.
+          if (dynamicData.products) {
+            // Exemple d'insertion dans un conteneur pour les fruits.
+            // Assure-toi d'avoir un élément HTML avec id="fruits-container"
+            const fruitsContainer = document.getElementById("fruits-container");
+            if (fruitsContainer && dynamicData.products.fruits) {
+              fruitsContainer.innerHTML = dynamicData.products.fruits
+                .map(product => `
+                  <div class="product-card">
+                    <img src="${product.image}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p>Prix : ${product.price} ${config.storeInfo.currency}</p>
+                  </div>
+                `)
+                .join('');
+            }
+            // Répéter pour d'autres catégories si besoin (ex.: légumes, herbes)
+            const legumesContainer = document.getElementById("legumes-container");
+            if (legumesContainer && dynamicData.products.legumes) {
+              legumesContainer.innerHTML = dynamicData.products.legumes
+                .map(product => `
+                  <div class="product-card">
+                    <img src="${product.image}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p>Prix : ${product.price} ${config.storeInfo.currency}</p>
+                  </div>
+                `)
+                .join('');
+            }
+            // De même pour "herbes" si nécessaire
+            const herbesContainer = document.getElementById("herbes-container");
+            if (herbesContainer && dynamicData.products.herbes) {
+              herbes-Container.innerHTML = dynamicData.products.herbes
+                .map(product => `
+                  <div class="product-card">
+                    <img src="${product.image}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p>Prix : ${product.price} ${config.storeInfo.currency}</p>
+                  </div>
+                `)
+                .join('');
+            }
+          } else {
+            console.error("La propriété 'products' est introuvable dans les données dynamiques.");
+          }
+        });
+    })
+    .catch(error => console.error("Erreur lors du chargement :", error));
+});
+</script>
     })
     .catch(error => console.error("Erreur lors du chargement de config.json :", error));
 </script>
