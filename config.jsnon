@@ -1,0 +1,82 @@
+{
+  "googleSheet": {
+    "sheetId": "1IW4oW043F1-Gv0C8POfsCJ7KSilKw89Ta0dsIgBIqQM",
+    "scriptUrl": "https://spreadsheets.google.com/feeds/list/${sheetId}/1/public/values?alt=json"
+  },
+  "storeInfo": {
+    "name": "Js Fruits&Légumes",
+    "currency": "€",
+    "logo": "/api/placeholder/200/100",
+    "contactEmail": "js.fruitsetlegumes@gmail.com",
+    "contactPhone": "+32476/61.42.65",
+    "address": "standby"
+  },
+  "features": {
+    "enableStock": true,
+    "enableNotifications": true,
+    "enableShipping": true,
+    "enablePayment": false,
+    "demoMode": false
+  },
+  "ui": {
+    "primaryColor": "#4CAF50",
+    "secondaryColor": "#FF9800",
+    "fontFamily": "Roboto, sans-serif",
+    "animationsEnabled": true,
+    "productsPerRow": 3
+  },
+  "categories": {
+    "fruits": {
+      "name": "Fruits",
+      "description": "Nos fruits frais et de saison",
+      "icon": "🍎"
+    },
+    "legumes": {
+      "name": "Légumes",
+      "description": "Légumes bio cultivés localement",
+      "icon": "🥦"
+    }
+  },
+  "fallbackProducts": {
+    "fruits": [
+      {
+        "id": "pomme-golden",
+        "name": "Pommes Golden",
+        "price": 3.50,
+        "unit": "kg",
+        "category": "fruits",
+        "image": "/api/placeholder/200/200",
+        "stock": 25
+      },
+      {
+        "id": "banane-bio",
+        "name": "Bananes Bio",
+        "price": 2.80,
+        "unit": "kg",
+        "category": "fruits",
+        "image": "/api/placeholder/200/200",
+        "stock": 30
+      }
+    ],
+    "legumes": [
+      {
+        "id": "carotte-bio",
+        "name": "Carottes Bio",
+        "price": 2.20,
+        "unit": "kg",
+        "category": "legumes",
+        "image": "/api/placeholder/200/200",
+        "stock": 15
+      },
+      {
+        "id": "tomate-grappe",
+        "name": "Tomates en Grappe",
+        "price": 3.90,
+        "unit": "kg",
+        "category": "legumes",
+        "image": "/api/placeholder/200/200",
+        "stock": 20
+      }
+    ]
+  }
+}
