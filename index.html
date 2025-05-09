@@ -802,102 +802,96 @@
 </div>
 
     <script>
-        // Données des produits (à remplacer par un fichier JSON externe)
-        // Variables globales
-        let config = {};
-        let products = { fruits: [], legumes: [] };
-        let cart = [];
-
-        // Charger la configuration
-        async function loadConfig() {
-            try {
-                const response = await fetch('config.json');
-                config = await response.json();
-                console.log('Configuration chargée avec succès');
-                return true;
-            } catch (error) {
-                console.error('Erreur lors du chargement de la configuration:', error);
-                return false;
-            }
-        }
-
-        // Initialisation de l'application
-        async function initApp() {
-            // Charger la configuration d'abord
-            const configLoaded = await loadConfig();
-            if (!configLoaded) {
-                console.error("Impossible de charger la configuration");
-                return;
-            }
-            
-            // Charger les produits depuis la feuille ou utiliser les produits de secours
-            if (config.googleSheet && config.googleSheet.sheetId) {
-                try {
-                    const loadedProducts = await loadProductsFromSheet();
-                    if (loadedProducts) {
-                        products = loadedProducts;
-                    } else {
-                        products = config.fallbackProducts || products;
-                    }
-                } catch (error) {
-                    console.error("Erreur lors du chargement des produits:", error);
-                    products = config.fallbackProducts || products;
-                }
-            } else {
-                products = config.fallbackProducts || products;
-            }
-            
-            // Afficher les produits
-            displayProducts();
-            
-            // Autres initialisations...
-        }
-
-        // Exécuter l'initialisation quand la page est chargée
-        window.addEventListener('DOMContentLoaded', initApp);
-
-        // Afficher les produits
-        function displayProducts() {
-            const fruitsContainer = document.getElementById('fruits-container');
-            const legumesContainer = document.getElementById('legumes-container');
-            
-            // Afficher les fruits
-            products.fruits.forEach(product => {
-                fruitsContainer.appendChild(createProductCard(product));
-            });
-            
-            // Afficher les légumes
-            products.legumes.forEach(product => {
-                legumesContainer.appendChild(createProductCard(product));
-            });
-        }
-
-        // Créer une carte de produit
-        function createProductCard(product) {
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            
-            card.innerHTML = `
-                <div class="product-image">
+/ Initialiser l'application au chargement
+document.addEventListener('DOMContentLoaded', function () {
+  fetch('config.json')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Erreur lors du chargement de config.json : " + response.status);
+      }
+      return response.json();
+    })
+    .then(config => {
+      console.log("Configuration chargée :", config);
+      // Utilise la configuration pour personnaliser l'affichage de la page
+      // par exemple, insertion dynamique de contenu dans un élément du DOM.
+      const mainContent = document.getElementById("main-content");
+      if (mainContent) {
+        mainContent.innerHTML = `
+          <h1>${config.storeInfo.name}</h1>
+          <p>Contactez-nous par email: ${config.storeInfo.contactEmail}</p>
+        `;
+      }
+      
+      // 2. Utiliser l'URL de l'Apps Script pour récupérer les données dynamiques
+      // L'URL doit être entre guillemets
+      return fetch("https://script.google.com/macros/s/1RyaVV9D5p6pDL9SAg7-CqUHOVUijBUIvVoRgPBL8_GLwD4xPtfQZHDB9/exec")
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Erreur lors du chargement des données de l'Apps Script : " + response.status);
+          }
+          return response.json();
+        })
+        .then(dynamicData => {
+          console.log("Données dynamiques :", dynamicData);
+          // Ici, on suppose que ton Apps Script renvoie un JSON comportant par exemple une clé "products"
+          // qui contient des tableaux pour "fruits", "legumes", et éventuellement "herbes".
+          // Assure-toi que la structure correspond à celle renvoyée par ton Apps Script.
+          if (dynamicData.products) {
+            // Exemple d'insertion dans un conteneur pour les fruits.
+            // Assure-toi d'avoir un élément HTML avec id="fruits-container"
+            const fruitsContainer = document.getElementById("fruits-container");
+            if (fruitsContainer && dynamicData.products.fruits) {
+              fruitsContainer.innerHTML = dynamicData.products.fruits
+                .map(product => `
+                  <div class="product-card">
                     <img src="${product.image}" alt="${product.name}">
-                </div>
-                <div class="product-info">
-                    <h3 class="product-name">${product.name}</h3>
-                    <p class="product-price">${product.price.toFixed(2)} €</p>
-                    <p class="product-unit">Prix par ${product.unit}</p>
-                    <button class="add-to-cart" onclick="addToCart('${product.id}', '${product.category}')">Ajouter au panier</button>
-                </div>
-            `;
-            
-            return card;
-        }
-
+                    <h3>${product.name}</h3>
+                    <p>Prix : ${product.price} ${config.storeInfo.currency}</p>
+                  </div>
+                `)
+                .join('');
+            }
+            // Répéter pour d'autres catégories si besoin (ex.: légumes, herbes)
+            const legumesContainer = document.getElementById("legumes-container");
+            if (legumesContainer && dynamicData.products.legumes) {
+              legumesContainer.innerHTML = dynamicData.products.legumes
+                .map(product => `
+                  <div class="product-card">
+                    <img src="${product.image}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p>Prix : ${product.price} ${config.storeInfo.currency}</p>
+                  </div>
+                `)
+                .join('');
+            }
+            // De même pour "herbes" si nécessaire
+            const herbesContainer = document.getElementById("herbes-container");
+            if (herbesContainer && dynamicData.products.herbes) {
+              // Correction: herbes-Container -> herbesContainer
+              herbesContainer.innerHTML = dynamicData.products.herbes
+                .map(product => `
+                  <div class="product-card">
+                    <img src="${product.image}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p>Prix : ${product.price} ${config.storeInfo.currency}</p>
+                  </div>
+                `)
+                .join('');
+            }
+          } else {
+            console.error("La propriété 'products' est introuvable dans les données dynamiques.");
+          }
+        });
+    })
+    .catch(error => console.error("Erreur lors du chargement :", error));
+});
         // Charger les produits depuis un Google Sheet
         async function loadProductsFromSheet() {
             try {
                 const sheetId = config.googleSheet.sheetId;
                 if (!sheetId) {
-                    console.warn("ID Google Sheet non défini dans la configuration");
+                    console.warn("1IW4oW043F1-Gv0C8POfsCJ7KSilKw89Ta0dsIgBIqQM");
                     return null;
                 }
                 
@@ -1271,94 +1265,6 @@
             updateCartCount();
             startCarouselInterval();
         }
-
-        / Initialiser l'application au chargement
-document.addEventListener('DOMContentLoaded', function () {
-  fetch('config.json')
-    .then(response => {
-      if (!response.ok) {
-        throw new Error("Erreur lors du chargement de config.json : " + response.status);
-      }
-      return response.json();
-    })
-    .then(config => {
-      console.log("Configuration chargée :", config);
-      // Utilise la configuration pour personnaliser l'affichage de la page
-      // par exemple, insertion dynamique de contenu dans un élément du DOM.
-      const mainContent = document.getElementById("main-content");
-      if (mainContent) {
-        mainContent.innerHTML = `
-          <h1>${config.storeInfo.name}</h1>
-          <p>Contactez-nous par email: ${config.storeInfo.contactEmail}</p>
-        `;
-      }
-      
-      // 2. Utiliser l'URL de l'Apps Script pour récupérer les données dynamiques
-      // L'URL doit être entre guillemets
-      return fetch("https://script.google.com/macros/s/1RyaVV9D5p6pDL9SAg7-CqUHOVUijBUIvVoRgPBL8_GLwD4xPtfQZHDB9/exec")
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("Erreur lors du chargement des données de l'Apps Script : " + response.status);
-          }
-          return response.json();
-        })
-        .then(dynamicData => {
-          console.log("Données dynamiques :", dynamicData);
-          // Ici, on suppose que ton Apps Script renvoie un JSON comportant par exemple une clé "products"
-          // qui contient des tableaux pour "fruits", "legumes", et éventuellement "herbes".
-          // Assure-toi que la structure correspond à celle renvoyée par ton Apps Script.
-          if (dynamicData.products) {
-            // Exemple d'insertion dans un conteneur pour les fruits.
-            // Assure-toi d'avoir un élément HTML avec id="fruits-container"
-            const fruitsContainer = document.getElementById("fruits-container");
-            if (fruitsContainer && dynamicData.products.fruits) {
-              fruitsContainer.innerHTML = dynamicData.products.fruits
-                .map(product => `
-                  <div class="product-card">
-                    <img src="${product.image}" alt="${product.name}">
-                    <h3>${product.name}</h3>
-                    <p>Prix : ${product.price} ${config.storeInfo.currency}</p>
-                  </div>
-                `)
-                .join('');
-            }
-            // Répéter pour d'autres catégories si besoin (ex.: légumes, herbes)
-            const legumesContainer = document.getElementById("legumes-container");
-            if (legumesContainer && dynamicData.products.legumes) {
-              legumesContainer.innerHTML = dynamicData.products.legumes
-                .map(product => `
-                  <div class="product-card">
-                    <img src="${product.image}" alt="${product.name}">
-                    <h3>${product.name}</h3>
-                    <p>Prix : ${product.price} ${config.storeInfo.currency}</p>
-                  </div>
-                `)
-                .join('');
-            }
-            // De même pour "herbes" si nécessaire
-            const herbesContainer = document.getElementById("herbes-container");
-            if (herbesContainer && dynamicData.products.herbes) {
-              // Correction: herbes-Container -> herbesContainer
-              herbesContainer.innerHTML = dynamicData.products.herbes
-                .map(product => `
-                  <div class="product-card">
-                    <img src="${product.image}" alt="${product.name}">
-                    <h3>${product.name}</h3>
-                    <p>Prix : ${product.price} ${config.storeInfo.currency}</p>
-                  </div>
-                `)
-                .join('');
-            }
-          } else {
-            console.error("La propriété 'products' est introuvable dans les données dynamiques.");
-          }
-        });
-    })
-    .catch(error => console.error("Erreur lors du chargement :", error));
-});
-</script>
-    })
-    .catch(error => console.error("Erreur lors du chargement de config.json :", error));
 </script>
 </body>
 </html>
