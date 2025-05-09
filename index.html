@@ -580,676 +580,785 @@
     </style>
 </head>
 <body>
-
-    // Placez ce script à la fin de votre body, juste avant la balise de fermeture </body>
-
-// Variables globales
-let config = {};
-let products = { fruits: [], legumes: [], herbes: [] };
-let cart = [];
-
-// Charger la configuration
-async function loadConfig() {
-    try {
-        const response = await fetch('config.json');
-        if (!response.ok) {
-            throw new Error(`Erreur HTTP ${response.status}`);
-        }
-        config = await response.json();
-        console.log('Configuration chargée avec succès:', config);
-        return config;
-    } catch (error) {
-        console.error('Erreur lors du chargement de la configuration:', error);
-        return null;
-    }
-}
-
-// Charger les produits depuis un Google Sheet
-async function loadProductsFromSheet() {
-    try {
-        if (!config.googleSheet || !config.googleSheet.scriptUrl) {
-            console.error("URL de l'Apps Script non définie dans la configuration");
-            return null;
-        }
-        
-        // Utiliser l'URL du script Apps Script pour récupérer les données
-        const scriptUrl = config.googleSheet.scriptUrl;
-        console.log("Tentative de chargement des données depuis:", scriptUrl);
-        
-        const response = await fetch(scriptUrl + "?action=getProducts");
-        
-        if (!response.ok) {
-            throw new Error(`Erreur HTTP ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log("Données reçues du Google Sheet:", data);
-        
-        // Vérifier la structure des données reçues
-        if (!data || !data.success) {
-            console.error("Format de données invalide:", data);
-            return null;
-        }
-        
-        return data.products || null;
-    } catch (error) {
-        console.error('Erreur lors du chargement des produits:', error);
-        return null;
-    }
-}
-
-// Initialisation de l'application
-async function initApp() {
-    try {
-        // 1. Charger la configuration
-        const configData = await loadConfig();
-        if (!configData) {
-            throw new Error("Impossible de charger la configuration");
-        }
-        
-        // 2. Charger les produits depuis Google Sheet
-        const loadedProducts = await loadProductsFromSheet();
-        if (loadedProducts) {
-            products = loadedProducts;
-            console.log("Produits chargés avec succès:", products);
-        } else {
-            // Utiliser les produits de secours si définis dans la config
-            console.warn("Utilisation des produits de secours");
-            products = config.fallbackProducts || products;
-        }
-        
-        // 3. Afficher les produits
-        displayProducts();
-        
-        // 4. Initialiser le carrousel
-        initCarousel();
-        
-        // 5. Initialiser le formulaire
-        initCheckoutForm();
-        
-        // 6. Récupérer le panier du localStorage si disponible
-        loadCartFromStorage();
-        
-    } catch (error) {
-        console.error("Erreur lors de l'initialisation de l'application:", error);
-        // Afficher un message d'erreur visible pour l'utilisateur
-        showNotification("Une erreur est survenue lors du chargement des données. Veuillez rafraîchir la page.", "error");
-    }
-}
-
-// Afficher les produits
-function displayProducts() {
-    // Afficher les fruits
-    displayProductCategory('fruits', 'fruits-container');
-    
-    // Afficher les légumes
-    displayProductCategory('legumes', 'legumes-container');
-    
-    // Afficher les herbes si disponibles
-    displayProductCategory('herbes', 'herbes-container');
-    
-    // Mettre à jour le compteur du panier
-    updateCartCount();
-}
-
-// Afficher une catégorie de produits
-function displayProductCategory(category, containerId) {
-    const container = document.getElementById(containerId);
-    if (!container) {
-        console.warn(`Conteneur ${containerId} non trouvé`);
-        return;
-    }
-    
-    // Vider le conteneur
-    container.innerHTML = '';
-    
-    // Vérifier si la catégorie existe
-    if (!products[category] || products[category].length === 0) {
-        container.innerHTML = '<p class="no-products">Aucun produit disponible dans cette catégorie</p>';
-        return;
-    }
-    
-    // Ajouter chaque produit au conteneur
-    products[category].forEach(product => {
-        container.appendChild(createProductCard(product, category));
-    });
-}
-
-// Créer une carte de produit
-function createProductCard(product, category) {
-    const card = document.createElement('div');
-    card.className = 'product-card';
-    
-    // Utiliser une image par défaut si aucune n'est fournie
-    const imageUrl = product.image || '/api/placeholder/200/200';
-    
-    card.innerHTML = `
-        <div class="product-image">
-            <img src="${imageUrl}" alt="${product.name}">
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo-container">
+                    <div class="logo">FL</div>
+                    <h1>FruitLégumes</h1>
+                </div>
+                <ul>
+                    <li><a href="#fruits">Fruits</a></li>
+                    <li><a href="#legumes">Légumes</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <div class="cart-icon" onclick="openCartModal()">
+                    🛒 <span class="cart-count">0</span>
+                </div>
+            </nav>
         </div>
-        <div class="product-info">
-            <h3 class="product-name">${product.name}</h3>
-            <p class="product-price">${product.price.toFixed(2)} €</p>
-            <p class="product-unit">Prix par ${product.unit || 'unité'}</p>
-            <button class="add-to-cart" onclick="addToCart('${product.id}', '${category}')">Ajouter au panier</button>
-        </div>
-    `;
-    
-    return card;
-}
+    </header>
 
-// Ajouter un produit au panier
-function addToCart(productId, category) {
-    const product = products[category].find(p => p.id === productId);
-    
-    if (product) {
-        // Vérifier si le produit est en stock (si la propriété stock existe)
-        if (product.hasOwnProperty('stock') && product.stock <= 0) {
-            showNotification(`${product.name} est en rupture de stock !`, 'error');
-            return;
+    <section class="carousel-container">
+        <div id="carousel" class="carousel">
+            <div class="carousel-slide active">
+                <img src="/api/placeholder/1200/400" alt="Produits frais">
+                <div class="carousel-content">
+                    <h1>Des produits frais, directement chez vous</h1>
+                    <p>Découvrez notre sélection de fruits et légumes frais de saison, cultivés localement.</p>
+                </div>
+            </div>
+            <div class="carousel-slide">
+                <img src="/api/placeholder/1200/400" alt="Produits bio">
+                <div class="carousel-content">
+                    <h1>100% Bio et Local</h1>
+                    <p>Nous collaborons avec des producteurs locaux pour vous garantir des produits de qualité.</p>
+                </div>
+            </div>
+            <div class="carousel-slide">
+                <img src="/api/placeholder/1200/400" alt="Livraison rapide">
+                <div class="carousel-content">
+                    <h1>Livraison rapide</h1>
+                    <p>Commandez avant midi et recevez vos produits le jour même.</p>
+                </div>
+            </div>
+            <div class="carousel-slide">
+                <img src="/api/placeholder/1200/400" alt="Offres spéciales">
+                <div class="carousel-content">
+                    <h1>Offres spéciales hebdomadaires</h1>
+                    <p>Découvrez nos promotions et paniers de saison à prix réduits chaque semaine.</p>
+                </div>
+            </div>
+            <button class="carousel-button prev" onclick="moveCarousel(-1)">❮</button>
+            <button class="carousel-button next" onclick="moveCarousel(1)">❯</button>
+            <div class="carousel-dots">
+                <span class="dot active" onclick="jumpToSlide(0)"></span>
+                <span class="dot" onclick="jumpToSlide(1)"></span>
+                <span class="dot" onclick="jumpToSlide(2)"></span>
+                <span class="dot" onclick="jumpToSlide(3)"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="products container">
+        <h2 class="section-title">Nos produits</h2>
+        
+        <h3 class="category-title">Fruits</h3>
+        <div id="fruits-container" class="product-grid">
+            <!-- Les produits seront insérés ici par JavaScript -->
+        </div>
+        
+        <h3 class="category-title">Légumes</h3>
+        <div id="legumes-container" class="product-grid">
+            <!-- Les produits seront insérés ici par JavaScript -->
+        </div>
+        
+        <h3 class="category-title">Herbes</h3>
+        <div id="herbes-container" class="product-grid">
+            <!-- Les produits seront insérés ici par JavaScript -->
+        </div>
+    </section>
+
+    <section id="contact" class="container">
+        <h2 class="section-title">Contact</h2>
+        <p style="text-align: center;">Pour toute question ou information, n'hésitez pas à nous contacter:</p>
+        <div style="text-align: center; margin-top: 20px;">
+            <p>📞 +32 476 61 42 65</p>
+            <p>✉️ js.fruitetlegumes@gmail.com</p>
+            <p>🏠 Arquennes</p>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>À propos</h3>
+                    <p>FruitLégumes est votre boutique en ligne de fruits et légumes frais. Nous travaillons avec des producteurs locaux pour vous offrir les meilleurs produits.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Liens rapides</h3>
+                    <ul>
+                        <li><a href="#fruits">Fruits</a></li>
+                        <li><a href="#legumes">Légumes</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Suivez-nous</h3>
+                    <div class="social-links">
+                        <a href="#">Facebook</a>
+                        <a href="#">Instagram</a>
+                        <a href="#">Twitter</a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 FruitLégumes. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cart Modal -->
+    <div id="cartModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeCartModal()">&times;</span>
+            <h2>Votre Panier</h2>
+            <div id="cart-items-container">
+                <table class="cart-table">
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th>Nom</th>
+                            <th>Prix</th>
+                            <th>Quantité</th>
+                            <th>Total</th>
+                            <th>Action</th>
+                        </tr>
+                </thead>
+                <tbody id="cart-items">
+                    <!-- Les produits du panier seront insérés ici -->
+                </tbody>
+            </table>
+        </div>
+        <div class="cart-summary">
+            <div class="cart-total">Total: <span id="cart-total-price">0.00</span> €</div>
+        </div>
+        
+        <!-- Début du formulaire de commande -->
+        <h2>Informations de commande</h2>
+        <form id="checkout-form">
+            <!-- Informations personnelles -->
+            <div class="form-group">
+                <label for="nom">Nom <span class="required">*</span></label>
+                <input type="text" id="nom" name="nom" required>
+                <div id="nom-error" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="prenom">Prénom <span class="required">*</span></label>
+                <input type="text" id="prenom" name="prenom" required>
+                <div id="prenom-error" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="telephone">Numéro de téléphone <span class="required">*</span></label>
+                <input type="tel" id="telephone" name="telephone" placeholder="ex: 0123456789" required>
+                <div id="telephone-error" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email <span class="required">*</span></label>
+                <input type="email" id="email" name="email" required>
+                <div id="email-error" class="error"></div>
+            </div>
+            
+            <!-- Option professionnel -->
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="professionnel" name="professionnel">
+                    Je suis un professionnel (option livraison disponible)
+                </label>
+            </div>
+            
+            <!-- Options de livraison/récupération -->
+            <div class="form-group" id="livraison-container" style="display: none;">
+                <label for="livraison">
+                    <input type="checkbox" id="livraison" name="livraison">
+                    Je souhaite une livraison (uniquement pour les professionnels)
+                </label>
+            </div>
+            
+            <!-- Date de récupération -->
+            <div class="form-group" id="date-pickup-container">
+                <label for="date-pickup">Date de récupération <span class="required">*</span></label>
+                <input type="date" id="date-pickup" name="date-pickup" required>
+                <div id="date-error" class="error"></div>
+                <div class="pickup-info">
+                    La date de récupération doit être au minimum 72h après la date de commande.
+                </div>
+            </div>
+            
+            <!-- Lieu de récupération -->
+            <div class="form-group" id="lieu-pickup-container">
+                <label for="lieu-pickup">Lieu de récupération <span class="required">*</span></label>
+                <select id="lieu-pickup" name="lieu-pickup" required disabled>
+                    <option value="">Sélectionnez une date de récupération d'abord</option>
+                </select>
+                <div id="lieu-error" class="error"></div>
+                <div class="pickup-info" id="pickup-details">
+                    <strong>Lieux de récupération disponibles selon le jour :</strong><br>
+                    - Mercredi : Enghien<br>
+                    - Vendredi : Lasne<br>
+                    - Samedi : Rixensart<br>
+                    - Dimanche : Silly
+                </div>
+            </div>
+            
+            <button type="submit" class="checkout-btn">Valider ma commande</button>
+        </form>
+        <!-- Fin du formulaire de commande -->
+    </div>
+</div>
+
+    <script>
+        // Données des produits (à remplacer par un fichier JSON externe)
+        // Variables globales
+        let config = {};
+        let products = { fruits: [], legumes: [] };
+        let cart = [];
+
+        // Charger la configuration
+        async function loadConfig() {
+            try {
+                const response = await fetch('config.json');
+                config = await response.json();
+                console.log('Configuration chargée avec succès');
+                return true;
+            } catch (error) {
+                console.error('Erreur lors du chargement de la configuration:', error);
+                return false;
+            }
         }
-        
-        // Vérifier si le produit est déjà dans le panier
-        const existingItem = cart.find(item => item.id === productId);
-        
-        if (existingItem) {
-            // Vérifier si l'augmentation de quantité dépasse le stock disponible
-            if (product.hasOwnProperty('stock') && existingItem.quantity + 1 > product.stock) {
-                showNotification(`Stock insuffisant pour ${product.name}`, 'error');
+
+        // Initialisation de l'application
+        async function initApp() {
+            // Charger la configuration d'abord
+            const configLoaded = await loadConfig();
+            if (!configLoaded) {
+                console.error("Impossible de charger la configuration");
                 return;
             }
             
-            existingItem.quantity += 1;
-        } else {
-            cart.push({
-                ...product,
-                category,
-                quantity: 1
+            // Charger les produits depuis la feuille ou utiliser les produits de secours
+            if (config.googleSheet && config.googleSheet.sheetId) {
+                try {
+                    const loadedProducts = await loadProductsFromSheet();
+                    if (loadedProducts) {
+                        products = loadedProducts;
+                    } else {
+                        products = config.fallbackProducts || products;
+                    }
+                } catch (error) {
+                    console.error("Erreur lors du chargement des produits:", error);
+                    products = config.fallbackProducts || products;
+                }
+            } else {
+                products = config.fallbackProducts || products;
+            }
+            
+            // Afficher les produits
+            displayProducts();
+            
+            // Autres initialisations...
+        }
+
+        // Exécuter l'initialisation quand la page est chargée
+        window.addEventListener('DOMContentLoaded', initApp);
+
+        // Afficher les produits
+        function displayProducts() {
+            const fruitsContainer = document.getElementById('fruits-container');
+            const legumesContainer = document.getElementById('legumes-container');
+            
+            // Afficher les fruits
+            products.fruits.forEach(product => {
+                fruitsContainer.appendChild(createProductCard(product));
+            });
+            
+            // Afficher les légumes
+            products.legumes.forEach(product => {
+                legumesContainer.appendChild(createProductCard(product));
             });
         }
-        
-        // Mettre à jour l'affichage du panier
-        updateCartCount();
-        saveCartToStorage();
-        showNotification(`${product.name} ajouté au panier !`, 'success');
-    }
-}
 
-// Sauvegarder le panier dans le localStorage
-function saveCartToStorage() {
-    localStorage.setItem('fruitlegumes_cart', JSON.stringify(cart));
-}
-
-// Charger le panier depuis le localStorage
-function loadCartFromStorage() {
-    const savedCart = localStorage.getItem('fruitlegumes_cart');
-    if (savedCart) {
-        try {
-            cart = JSON.parse(savedCart);
-            updateCartCount();
-        } catch (e) {
-            console.error("Erreur lors du chargement du panier:", e);
-            cart = [];
-        }
-    }
-}
-
-// Mettre à jour le compteur du panier
-function updateCartCount() {
-    const cartCount = document.querySelector('.cart-count');
-    if (cartCount) {
-        const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
-        cartCount.textContent = totalItems;
-    }
-}
-
-// Afficher notification avec type (success, error)
-function showNotification(message, type = 'success') {
-    // Créer une notification avec style selon le type
-    const notification = document.createElement('div');
-    notification.textContent = message;
-    notification.style.position = 'fixed';
-    notification.style.bottom = '20px';
-    notification.style.right = '20px';
-    notification.style.padding = '10px 20px';
-    notification.style.borderRadius = '4px';
-    notification.style.zIndex = '1001';
-    notification.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
-    
-    // Appliquer la couleur selon le type
-    if (type === 'error') {
-        notification.style.backgroundColor = '#e53935';
-    } else {
-        notification.style.backgroundColor = 'var(--primary-color, #4CAF50)';
-    }
-    notification.style.color = 'white';
-    
-    document.body.appendChild(notification);
-    
-    // Supprimer après 3 secondes
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transition = 'opacity 0.5s';
-        setTimeout(() => {
-            document.body.removeChild(notification);
-        }, 500);
-    }, 3000);
-}
-
-// Ouvrir le panier modal
-function openCartModal() {
-    const modal = document.getElementById('cartModal');
-    if (modal) {
-        modal.style.display = 'block';
-        updateCartItems();
-    }
-}
-
-// Fermer le panier modal
-function closeCartModal() {
-    const modal = document.getElementById('cartModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// Mettre à jour les éléments du panier
-function updateCartItems() {
-    const cartItemsContainer = document.getElementById('cart-items');
-    const cartTotalPrice = document.getElementById('cart-total-price');
-    
-    if (!cartItemsContainer || !cartTotalPrice) {
-        console.warn("Éléments du panier non trouvés");
-        return;
-    }
-    
-    // Vider le conteneur
-    cartItemsContainer.innerHTML = '';
-    
-    if (cart.length === 0) {
-        cartItemsContainer.innerHTML = '<tr><td colspan="6" style="text-align: center;">Votre panier est vide</td></tr>';
-        cartTotalPrice.textContent = '0.00';
-        return;
-    }
-    
-    // Ajouter chaque produit au panier
-    let total = 0;
-    
-    cart.forEach(item => {
-        const itemTotal = item.price * item.quantity;
-        total += itemTotal;
-        
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td data-label="Produit"><img src="${item.image || '/api/placeholder/100/100'}" alt="${item.name}" class="cart-item-image"></td>
-            <td data-label="Nom">${item.name}</td>
-            <td data-label="Prix">${item.price.toFixed(2)} €/${item.unit || 'unité'}</td>
-            <td data-label="Quantité">
-                <div class="quantity-control">
-                    <button class="quantity-btn" onclick="updateItemQuantity('${item.id}', ${item.quantity - 1})">-</button>
-                    <input type="number" class="quantity-input" value="${item.quantity}" min="1" onchange="updateItemQuantity('${item.id}', this.value)">
-                    <button class="quantity-btn" onclick="updateItemQuantity('${item.id}', ${item.quantity + 1})">+</button>
+        // Créer une carte de produit
+        function createProductCard(product) {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            
+            card.innerHTML = `
+                <div class="product-image">
+                    <img src="${product.image}" alt="${product.name}">
                 </div>
-            </td>
-            <td data-label="Total">${itemTotal.toFixed(2)} €</td>
-            <td data-label="Action"><span class="remove-item" onclick="removeFromCart('${item.id}')">❌</span></td>
-        `;
-        
-        cartItemsContainer.appendChild(tr);
-    });
-    
-    cartTotalPrice.textContent = total.toFixed(2);
-}
-
-// Mettre à jour la quantité d'un produit
-function updateItemQuantity(productId, quantity) {
-    const item = cart.find(item => item.id === productId);
-    
-    if (item) {
-        quantity = parseInt(quantity);
-        
-        if (quantity <= 0) {
-            removeFromCart(productId);
-        } else {
-            item.quantity = quantity;
-            updateCartCount();
-            updateCartItems();
-            saveCartToStorage();
+                <div class="product-info">
+                    <h3 class="product-name">${product.name}</h3>
+                    <p class="product-price">${product.price.toFixed(2)} €</p>
+                    <p class="product-unit">Prix par ${product.unit}</p>
+                    <button class="add-to-cart" onclick="addToCart('${product.id}', '${product.category}')">Ajouter au panier</button>
+                </div>
+            `;
+            
+            return card;
         }
-    }
-}
 
-// Supprimer un produit du panier
-function removeFromCart(productId) {
-    cart = cart.filter(item => item.id !== productId);
-    updateCartCount();
-    updateCartItems();
-    saveCartToStorage();
-}
-
-// Initialiser le carrousel
-function initCarousel() {
-    startCarouselInterval();
-}
-
-// Variables pour le carrousel
-let currentSlide = 0;
-let carouselInterval;
-
-// Déplacer le carrousel
-function moveCarousel(direction) {
-    // Arrêter l'auto-rotation quand l'utilisateur interagit
-    stopCarouselInterval();
-    
-    const slides = document.querySelectorAll('.carousel-slide');
-    const dots = document.querySelectorAll('.dot');
-    
-    if (slides.length === 0) return;
-    
-    const totalSlides = slides.length;
-    
-    // Retirer la classe active de la slide actuelle
-    slides[currentSlide].classList.remove('active');
-    if (dots[currentSlide]) dots[currentSlide].classList.remove('active');
-    
-    // Calculer la nouvelle slide
-    currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
-    
-    // Ajouter la classe active à la nouvelle slide
-    slides[currentSlide].classList.add('active');
-    if (dots[currentSlide]) dots[currentSlide].classList.add('active');
-    
-    // Redémarrer l'auto-rotation
-    startCarouselInterval();
-}
-
-// Aller directement à une slide spécifique
-function jumpToSlide(slideIndex) {
-    stopCarouselInterval();
-    
-    const slides = document.querySelectorAll('.carousel-slide');
-    const dots = document.querySelectorAll('.dot');
-    
-    if (slides.length === 0) return;
-    
-    // Retirer la classe active de la slide actuelle
-    slides[currentSlide].classList.remove('active');
-    if (dots[currentSlide]) dots[currentSlide].classList.remove('active');
-    
-    // Définir la nouvelle slide
-    currentSlide = slideIndex;
-    
-    // Ajouter la classe active à la nouvelle slide
-    slides[currentSlide].classList.add('active');
-    if (dots[currentSlide]) dots[currentSlide].classList.add('active');
-    
-    startCarouselInterval();
-}
-
-// Démarrer l'auto-rotation du carrousel
-function startCarouselInterval() {
-    carouselInterval = setInterval(() => {
-        moveCarousel(1);
-    }, 5000); // Changer de slide toutes les 5 secondes
-}
-
-// Arrêter l'auto-rotation du carrousel
-function stopCarouselInterval() {
-    clearInterval(carouselInterval);
-}
-
-// Initialiser le formulaire de commande
-function initCheckoutForm() {
-    const checkoutForm = document.getElementById('checkout-form');
-    if (!checkoutForm) return;
-    
-    // Gérer l'affichage des options professionnelles
-    const professionnelCheckbox = document.getElementById('professionnel');
-    const livraisonContainer = document.getElementById('livraison-container');
-    
-    if (professionnelCheckbox && livraisonContainer) {
-        professionnelCheckbox.addEventListener('change', function() {
-            livraisonContainer.style.display = this.checked ? 'block' : 'none';
-        });
-    }
-    
-    // Gérer la sélection de date
-    const datePickup = document.getElementById('date-pickup');
-    const lieuPickup = document.getElementById('lieu-pickup');
-    
-    if (datePickup && lieuPickup) {
-        // Définir la date minimale (72h après aujourd'hui)
-        const today = new Date();
-        const minDate = new Date(today);
-        minDate.setDate(today.getDate() + 3);
-        
-        const year = minDate.getFullYear();
-        const month = String(minDate.getMonth() + 1).padStart(2, '0');
-        const day = String(minDate.getDate()).padStart(2, '0');
-        
-        datePickup.min = `${year}-${month}-${day}`;
-        
-        // Mettre à jour le lieu en fonction de la date
-        datePickup.addEventListener('change', function() {
-            const selectedDate = new Date(this.value);
-            const dayOfWeek = selectedDate.getDay(); // 0 = Dimanche, 1 = Lundi, etc.
-            
-            // Activer le select du lieu
-            lieuPickup.disabled = false;
-            lieuPickup.innerHTML = '<option value="">Sélectionnez un lieu</option>';
-            
-            // Ajouter les options selon le jour
-            switch (dayOfWeek) {
-                case 3: // Mercredi
-                    lieuPickup.innerHTML += '<option value="enghien">Enghien</option>';
-                    break;
-                case 5: // Vendredi
-                    lieuPickup.innerHTML += '<option value="lasne">Lasne</option>';
-                    break;
-                case 6: // Samedi
-                    lieuPickup.innerHTML += '<option value="rixensart">Rixensart</option>';
-                    break;
-                case 0: // Dimanche
-                    lieuPickup.innerHTML += '<option value="silly">Silly</option>';
-                    break;
-                default:
-                    lieuPickup.innerHTML = '<option value="">Pas de livraison disponible ce jour</option>';
-                    lieuPickup.disabled = true;
+        // Charger les produits depuis un Google Sheet
+        async function loadProductsFromSheet() {
+            try {
+                const sheetId = config.googleSheet.sheetId;
+                if (!sheetId) {
+                    console.warn("ID Google Sheet non défini dans la configuration");
+                    return null;
+                }
+                
+                const url = `https://spreadsheets.google.com/feeds/list/${sheetId}/1/public/values?alt=json`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                // Traiter les données
+                const entries = data.feed.entry;
+                const productsData = {
+                    fruits: [],
+                    legumes: []
+                };
+                
+                if (entries && entries.length) {
+                    entries.forEach(entry => {
+                        const product = {
+                            id: entry.gsx$id.$t,
+                            name: entry.gsx$nom.$t,
+                            price: parseFloat(entry.gsx$prix.$t),
+                            unit: entry.gsx$unite.$t,
+                            category: entry.gsx$categorie.$t,
+                            image: entry.gsx$image.$t || '/api/placeholder/200/200',
+                            stock: parseInt(entry.gsx$stock.$t) || 0
+                        };
+                        
+                        if (product.category === 'fruits') {
+                            productsData.fruits.push(product);
+                        } else if (product.category === 'legumes') {
+                            productsData.legumes.push(product);
+                        }
+                    });
+                }
+                
+                return productsData;
+            } catch (error) {
+                console.error('Erreur lors du chargement des produits:', error);
+                // En cas d'erreur, retourner les données statiques par défaut
+                return products;
             }
-        });
-    }
-    
-    // Gérer la soumission du formulaire
-    checkoutForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        submitOrder();
-    });
-}
+        }
 
-// Envoyer une commande
-async function submitOrder() {
+        // Envoyer une commande au Google Sheet
+        async function sendOrderToSheet(orderData) {
     try {
-        if (cart.length === 0) {
-            showNotification('Votre panier est vide !', 'error');
-            return;
-        }
-        
-        // Valider le formulaire
-        if (!validateCheckoutForm()) {
-            return;
-        }
-        
-        // Collecter les données du formulaire
-        const formData = {
-            customer: {
-                firstName: document.getElementById('prenom').value,
-                lastName: document.getElementById('nom').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('telephone').value,
-                isProfessional: document.getElementById('professionnel').checked
-            },
-            delivery: {
-                isDelivery: document.getElementById('professionnel').checked && document.getElementById('livraison').checked,
-                pickupDate: document.getElementById('date-pickup').value,
-                pickupLocation: document.getElementById('lieu-pickup').value
-            },
-            items: cart.map(item => ({
-                id: item.id,
-                name: item.name,
-                price: item.price,
-                quantity: item.quantity,
-                total: item.price * item.quantity
-            })),
-            total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-            date: new Date().toISOString(),
-            status: 'Nouvelle'
-        };
-        
-        // Envoyer la commande au Google Sheet
-        const result = await sendOrderToSheet(formData);
-        
-        if (result && result.success) {
-            showNotification('Commande envoyée avec succès!', 'success');
-            
-            // Vider le panier
-            cart = [];
-            saveCartToStorage();
-            updateCartCount();
-            closeCartModal();
-            
-            // Rediriger vers une page de confirmation ou afficher un message
-            // window.location.href = 'confirmation.html';
-        } else {
-            throw new Error(result?.error || 'Erreur inconnue');
-        }
-    } catch (error) {
-        console.error('Erreur lors de la commande:', error);
-        showNotification('Un problème est survenu lors de la commande. Veuillez réessayer.', 'error');
-    }
-}
-
-// Valider le formulaire de commande
-function validateCheckoutForm() {
-    let isValid = true;
-    
-    // Valider le nom
-    const nom = document.getElementById('nom');
-    const nomError = document.getElementById('nom-error');
-    if (nom.value.trim() === '') {
-        nomError.textContent = 'Veuillez entrer votre nom';
-        isValid = false;
-    } else {
-        nomError.textContent = '';
-    }
-    
-    // Valider le prénom
-    const prenom = document.getElementById('prenom');
-    const prenomError = document.getElementById('prenom-error');
-    if (prenom.value.trim() === '') {
-        prenomError.textContent = 'Veuillez entrer votre prénom';
-        isValid = false;
-    } else {
-        prenomError.textContent = '';
-    }
-    
-    // Valider le téléphone
-    const telephone = document.getElementById('telephone');
-    const telephoneError = document.getElementById('telephone-error');
-    if (telephone.value.trim() === '') {
-        telephoneError.textContent = 'Veuillez entrer votre numéro de téléphone';
-        isValid = false;
-    } else {
-        telephoneError.textContent = '';
-    }
-    
-    // Valider l'email
-    const email = document.getElementById('email');
-    const emailError = document.getElementById('email-error');
-    if (email.value.trim() === '') {
-        emailError.textContent = 'Veuillez entrer votre email';
-        isValid = false;
-    } else if (!isValidEmail(email.value)) {
-        emailError.textContent = 'Veuillez entrer un email valide';
-        isValid = false;
-    } else {
-        emailError.textContent = '';
-    }
-    
-    // Valider la date de récupération
-    const datePickup = document.getElementById('date-pickup');
-    const dateError = document.getElementById('date-error');
-    if (datePickup.value === '') {
-        dateError.textContent = 'Veuillez sélectionner une date de récupération';
-        isValid = false;
-    } else {
-        dateError.textContent = '';
-    }
-    
-    // Valider le lieu de récupération
-    const lieuPickup = document.getElementById('lieu-pickup');
-    const lieuError = document.getElementById('lieu-error');
-    if (lieuPickup.value === '') {
-        lieuError.textContent = 'Veuillez sélectionner un lieu de récupération';
-        isValid = false;
-    } else {
-        lieuError.textContent = '';
-    }
-    
-    return isValid;
-}
-
-// Vérifier si un email est valide
-function isValidEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-}
-
-// Envoyer une commande au Google Sheet
-async function sendOrderToSheet(orderData) {
-    try {
-        const scriptUrl = config.googleSheet?.scriptUrl;
+        const scriptUrl = config.googleSheet.scriptUrl;
         if (!scriptUrl) {
-            console.error("URL de l'Apps Script non définie dans la configuration");
+            console.warn("https://script.google.com/macros/s/AKfycbw8DbyXu-dbPA1eya-JiKbiSVGzuuHjr7iR_NPj5eSFSdHZfQzW7En-oSUaOyCifpcL/exec");
             return { success: false, error: 'Configuration incomplète' };
         }
-        
-        console.log("Envoi de la commande à:", scriptUrl);
-        console.log("Données de la commande:", orderData);
         
         const response = await fetch(scriptUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                action: 'submitOrder',
-                order: orderData
-            })
+            body: JSON.stringify(orderData)
         });
         
-        if (!response.ok) {
-            throw new Error(`Erreur HTTP: ${response.status}`);
-        }
-        
         const result = await response.json();
-        console.log("Réponse du serveur:", result);
-        
         return result;
     } catch (error) {
         console.error('Erreur lors de l\'envoi de la commande:', error);
-        return { success: false, error: error.message || 'Erreur de connexion' };
+        return { success: false, error: 'Erreur de connexion' };
     }
 }
 
-// Initialiser l'application au chargement de la page
-document.addEventListener('DOMContentLoaded', initApp);
+        // Vérifier le stock avant d'ajouter au panier
+        function checkStock(productId, category) {
+            const product = products[category].find(p => p.id === productId);
+            
+            if (product && product.stock > 0) {
+                return true;
+            } else if (product && product.stock <= 0) {
+                showNotification('Ce produit est en rupture de stock', 'error');
+                return false;
+            }
+            return false;
+        }
 
-// Fermer le modal en cliquant en dehors
-window.onclick = function(event) {
-    const modal = document.getElementById('cartModal');
-    if (event.target === modal) {
-        closeCartModal();
+        // Ajouter un produit au panier avec vérification du stock
+        function addToCart(productId, category) {
+            const product = products[category].find(p => p.id === productId);
+            
+            if (product) {
+                // Vérifier si le produit est en stock (si la propriété stock existe)
+                if (product.hasOwnProperty('stock') && product.stock <= 0) {
+                    showNotification(`${product.name} est en rupture de stock !`, 'error');
+                    return;
+                }
+                
+                // Vérifier si le produit est déjà dans le panier
+                const existingItem = cart.find(item => item.id === productId);
+                
+                if (existingItem) {
+                    // Vérifier si l'augmentation de quantité dépasse le stock disponible
+                    if (product.hasOwnProperty('stock') && existingItem.quantity + 1 > product.stock) {
+                        showNotification(`Stock insuffisant pour ${product.name}`, 'error');
+                        return;
+                    }
+                    
+                    existingItem.quantity += 1;
+                } else {
+                    cart.push({
+                        ...product,
+                        quantity: 1
+                    });
+                }
+                
+                updateCartCount();
+                showNotification(`${product.name} ajouté au panier !`, 'success');
+            }
+        }
+
+        // Afficher notification avec type (success, error)
+        function showNotification(message, type = 'success') {
+            // Créer une notification avec style selon le type
+            const notification = document.createElement('div');
+            notification.textContent = message;
+            notification.style.position = 'fixed';
+            notification.style.bottom = '20px';
+            notification.style.right = '20px';
+            notification.style.padding = '10px 20px';
+            notification.style.borderRadius = '4px';
+            notification.style.zIndex = '1001';
+            notification.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+            
+            // Appliquer la couleur selon le type
+            if (type === 'error') {
+                notification.style.backgroundColor = '#e53935';
+            } else {
+                notification.style.backgroundColor = 'var(--primary-color)';
+            }
+            notification.style.color = 'white';
+            
+            document.body.appendChild(notification);
+            
+            // Supprimer après 3 secondes
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.5s';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 500);
+            }, 3000);
+        }
+
+        // Ouvrir le panier modal
+        function openCartModal() {
+            const modal = document.getElementById('cartModal');
+            modal.style.display = 'block';
+            updateCartItems();
+        }
+
+        // Fermer le panier modal
+        function closeCartModal() {
+            const modal = document.getElementById('cartModal');
+            modal.style.display = 'none';
+        }
+
+        // Mettre à jour les éléments du panier
+        function updateCartItems() {
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartTotalPrice = document.getElementById('cart-total-price');
+            
+            // Vider le conteneur
+            cartItemsContainer.innerHTML = '';
+            
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<tr><td colspan="6" style="text-align: center;">Votre panier est vide</td></tr>';
+                cartTotalPrice.textContent = '0.00';
+                return;
+            }
+            
+            // Ajouter chaque produit au panier
+            let total = 0;
+            
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td data-label="Produit"><img src="${item.image}" alt="${item.name}" class="cart-item-image"></td>
+                    <td data-label="Nom">${item.name}</td>
+                    <td data-label="Prix">${item.price.toFixed(2)} €/${item.unit}</td>
+                    <td data-label="Quantité">
+                        <div class="quantity-control">
+                            <button class="quantity-btn" onclick="updateItemQuantity('${item.id}', ${item.quantity - 1})">-</button>
+                            <input type="number" class="quantity-input" value="${item.quantity}" min="1" onchange="updateItemQuantity('${item.id}', this.value)">
+                            <button class="quantity-btn" onclick="updateItemQuantity('${item.id}', ${item.quantity + 1})">+</button>
+                        </div>
+                    </td>
+                    <td data-label="Total">${itemTotal.toFixed(2)} €</td>
+                    <td data-label="Action"><span class="remove-item" onclick="removeFromCart('${item.id}')">❌</span></td>
+                `;
+                
+                cartItemsContainer.appendChild(tr);
+            });
+            
+            cartTotalPrice.textContent = total.toFixed(2);
+        }
+
+        // Mettre à jour la quantité d'un produit
+        function updateItemQuantity(productId, quantity) {
+            const item = cart.find(item => item.id === productId);
+            
+            if (item) {
+                quantity = parseInt(quantity);
+                
+                if (quantity <= 0) {
+                    removeFromCart(productId);
+                } else {
+                    item.quantity = quantity;
+                    updateCartCount();
+                    updateCartItems();
+                }
+            }
+        }
+
+        // Supprimer un produit du panier
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCartCount();
+            updateCartItems();
+        }
+
+        // Passer à la commande
+        async function checkout() {
+    if (cart.length === 0) {
+        showNotification('Votre panier est vide !', 'error');
+        return;
     }
-};
+    
+    // Collecter les données de commande
+    const orderItems = cart.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        total: item.price * item.quantity
+    }));
+    
+    const orderTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    
+    // Données client (à remplacer par un formulaire)
+    const customerData = {
+        name: prompt('Votre nom :') || 'Client',
+        email: prompt('Votre email :') || 'email@exemple.com',
+        phone: prompt('Votre téléphone :') || 'Non spécifié',
+        address: prompt('Votre adresse de livraison :') || 'Non spécifiée'
+    };
+    
+    // Créer l'objet commande
+    const orderData = {
+        customer: customerData,
+        items: orderItems,
+        total: orderTotal,
+        date: new Date().toISOString(),
+        status: 'Nouvelle'
+    };
+    
+    try {
+        if (config.features && config.features.demoMode) {
+            // Mode démo
+            console.log('Données de commande (mode démo):', orderData);
+            showNotification('Commande démo traitée avec succès!', 'success');
+        } else {
+            // Mode production
+            const result = await sendOrderToSheet(orderData);
+            if (result.success) {
+                showNotification('Commande envoyée avec succès!', 'success');
+            } else {
+                throw new Error(result.error || 'Erreur inconnue');
+            }
+        }
+        
+        // Vider le panier
+        cart = [];
+        updateCartCount();
+        closeCartModal();
+    } catch (error) {
+        console.error('Erreur lors de la commande:', error);
+        showNotification('Un problème est survenu lors de la commande. Veuillez réessayer.', 'error');
+    }
+}
+
+        // Fermer le modal en cliquant en dehors
+        window.onclick = function(event) {
+            const modal = document.getElementById('cartModal');
+            if (event.target === modal) {
+                closeCartModal();
+            }
+        };
+
+        // Variables pour le carrousel
+        let currentSlide = 0;
+        const totalSlides = document.querySelectorAll('.carousel-slide').length;
+        let carouselInterval;
+
+        // Déplacer le carrousel
+        function moveCarousel(direction) {
+            // Arrêter l'auto-rotation quand l'utilisateur interagit
+            stopCarouselInterval();
+            
+            const slides = document.querySelectorAll('.carousel-slide');
+            const dots = document.querySelectorAll('.dot');
+            
+            // Retirer la classe active de la slide actuelle
+            slides[currentSlide].classList.remove('active');
+            dots[currentSlide].classList.remove('active');
+            
+            // Calculer la nouvelle slide
+            currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
+            
+            // Ajouter la classe active à la nouvelle slide
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+            
+            // Redémarrer l'auto-rotation
+            startCarouselInterval();
+        }
+
+        // Aller directement à une slide spécifique
+        function jumpToSlide(slideIndex) {
+            stopCarouselInterval();
+            
+            const slides = document.querySelectorAll('.carousel-slide');
+            const dots = document.querySelectorAll('.dot');
+            
+            // Retirer la classe active de la slide actuelle
+            slides[currentSlide].classList.remove('active');
+            dots[currentSlide].classList.remove('active');
+            
+            // Définir la nouvelle slide
+            currentSlide = slideIndex;
+            
+            // Ajouter la classe active à la nouvelle slide
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+            
+            startCarouselInterval();
+        }
+
+        // Démarrer l'auto-rotation du carrousel
+        function startCarouselInterval() {
+            carouselInterval = setInterval(() => {
+                moveCarousel(1);
+            }, 5000); // Changer de slide toutes les 5 secondes
+        }
+
+        // Arrêter l'auto-rotation du carrousel
+        function stopCarouselInterval() {
+            clearInterval(carouselInterval);
+        }
+
+        // Initialiser l'affichage des produits et le carrousel
+        async function initializeApp() {
+            try {
+                // Essayer de charger les produits depuis le Google Sheet
+                // Décommenter cette ligne quand le Google Sheet sera configuré
+                // products = await loadProductsFromSheet();
+            } catch (error) {
+                console.error('Erreur lors du chargement des données:', error);
+                // En cas d'échec, utiliser les données statiques
+            }
+            
+            // Afficher les produits
+            displayProducts();
+            updateCartCount();
+            startCarouselInterval();
+        }
+
+        / Initialiser l'application au chargement
+document.addEventListener('DOMContentLoaded', function () {
+  fetch('config.json')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Erreur lors du chargement de config.json : " + response.status);
+      }
+      return response.json();
+    })
+    .then(config => {
+      console.log("Configuration chargée :", config);
+      // Utilise la configuration pour personnaliser l'affichage de la page
+      // par exemple, insertion dynamique de contenu dans un élément du DOM.
+      const mainContent = document.getElementById("main-content");
+      if (mainContent) {
+        mainContent.innerHTML = `
+          <h1>${config.storeInfo.name}</h1>
+          <p>Contactez-nous par email: ${config.storeInfo.contactEmail}</p>
+        `;
+      }
+      
+      // 2. Utiliser l'URL de l'Apps Script pour récupérer les données dynamiques
+      // L'URL doit être entre guillemets
+      return fetch("https://script.google.com/macros/s/1RyaVV9D5p6pDL9SAg7-CqUHOVUijBUIvVoRgPBL8_GLwD4xPtfQZHDB9/exec")
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Erreur lors du chargement des données de l'Apps Script : " + response.status);
+          }
+          return response.json();
+        })
+        .then(dynamicData => {
+          console.log("Données dynamiques :", dynamicData);
+          // Ici, on suppose que ton Apps Script renvoie un JSON comportant par exemple une clé "products"
+          // qui contient des tableaux pour "fruits", "legumes", et éventuellement "herbes".
+          // Assure-toi que la structure correspond à celle renvoyée par ton Apps Script.
+          if (dynamicData.products) {
+            // Exemple d'insertion dans un conteneur pour les fruits.
+            // Assure-toi d'avoir un élément HTML avec id="fruits-container"
+            const fruitsContainer = document.getElementById("fruits-container");
+            if (fruitsContainer && dynamicData.products.fruits) {
+              fruitsContainer.innerHTML = dynamicData.products.fruits
+                .map(product => `
+                  <div class="product-card">
+                    <img src="${product.image}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p>Prix : ${product.price} ${config.storeInfo.currency}</p>
+                  </div>
+                `)
+                .join('');
+            }
+            // Répéter pour d'autres catégories si besoin (ex.: légumes, herbes)
+            const legumesContainer = document.getElementById("legumes-container");
+            if (legumesContainer && dynamicData.products.legumes) {
+              legumesContainer.innerHTML = dynamicData.products.legumes
+                .map(product => `
+                  <div class="product-card">
+                    <img src="${product.image}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p>Prix : ${product.price} ${config.storeInfo.currency}</p>
+                  </div>
+                `)
+                .join('');
+            }
+            // De même pour "herbes" si nécessaire
+            const herbesContainer = document.getElementById("herbes-container");
+            if (herbesContainer && dynamicData.products.herbes) {
+              // Correction: herbes-Container -> herbesContainer
+              herbesContainer.innerHTML = dynamicData.products.herbes
+                .map(product => `
+                  <div class="product-card">
+                    <img src="${product.image}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p>Prix : ${product.price} ${config.storeInfo.currency}</p>
+                  </div>
+                `)
+                .join('');
+            }
+          } else {
+            console.error("La propriété 'products' est introuvable dans les données dynamiques.");
+          }
+        });
+    })
+    .catch(error => console.error("Erreur lors du chargement :", error));
+});
+</script>
+    })
+    .catch(error => console.error("Erreur lors du chargement de config.json :", error));
+</script>
 </body>
 </html>
